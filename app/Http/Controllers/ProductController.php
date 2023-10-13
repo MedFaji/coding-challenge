@@ -12,15 +12,8 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $products = Product::with('categories')->get();
+        return $products;
     }
 
     /**
@@ -28,7 +21,16 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string',
+            'description' => 'required|string',
+            'price' => 'required|numeric',
+            'category_ids' => 'required|array',
+        ]);
+
+        $product = Product::create($request->all());
+        $product->categories()->sync($request->input('category_ids'));
+        return response()->json($product, 201);
     }
 
     /**
@@ -36,23 +38,27 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        //
+        $product->load('categories'); //eager loading
+        return $product;
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Product $product)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Product $product)
     {
-        //
+        $request->validate([
+            'name' => 'required|string',
+            'description' => 'required|string',
+            'price' => 'required|numeric',
+            'category_ids' => 'required|array',
+        ]);
+
+        $product->update($request->all());
+        $product->categories()->sync($request->input('category_ids'));
+
+        return $product;
     }
 
     /**
@@ -60,6 +66,7 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        //
+        $product->delete();
+        return response()->json(["message" => "Product deleted successfully"]);
     }
 }

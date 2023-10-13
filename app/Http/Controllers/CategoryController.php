@@ -12,15 +12,8 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $categories = Category::with('children', 'parent')->get();
+        return $categories;
     }
 
     /**
@@ -28,7 +21,15 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string',
+            'parent_id' => 'nullable|exists:categories,id',
+        ]);
+
+        $category = Category::create($request->all());
+        return response()->json([
+            $category
+        ], 201);
     }
 
     /**
@@ -36,15 +37,8 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Category $category)
-    {
-        //
+        $category->load('children', 'parent');
+        return $category;
     }
 
     /**
@@ -52,7 +46,13 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        //
+        $request->validate([
+            'name' => 'required|string',
+            'parent_id' => 'nullable|exists:categories,id',
+        ]);
+
+        $category->update($request->all());
+        return $category;
     }
 
     /**
@@ -60,6 +60,7 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        //
+        $category->delete();
+        return response()->json(["message" => "Category deleted successfully"]);
     }
 }

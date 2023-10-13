@@ -3,9 +3,11 @@
         <div class="d-flex justify-content-between">
             <div>
                 <h3>Products</h3>
+                <button @click="sortByName" class="btn btn-light my-2">Sort by Name</button>
+                <button @click="sortByPrice" class="btn btn-light">Sort by Price</button>
             </div>
             <div>
-                <input class="form-control me-2" v-model="searchQuery" @input="searchProducts" placeholder="Search products" aria-label="Search">
+                <input class="form-control me-2" v-model="searchQuery" @input="fetchData" placeholder="Search products" aria-label="Search">
             </div>
         </div>
 
@@ -43,7 +45,7 @@
     </div>
     <div class="d-flex justify-content-center mt-5"><Bootstrap5Pagination
         :data="products"
-        @pagination-change-page="fetchProducts"
+        @pagination-change-page="fetchData"
     /></div>
 
 
@@ -54,37 +56,45 @@ import axios from 'axios';
 import { ref, onMounted } from 'vue';
 import { Bootstrap5Pagination } from 'laravel-vue-pagination';
 
-
 const products = ref([]);
 const searchQuery = ref('');
+const sortBy = ref('');
 
-const searchProducts = async (page = 1) => {
+const fetchData = async (page = 1) => {
     try {
-        const response = await axios.get(`/api/products/search?page=${page}`, {
-            params: {
-                s: searchQuery.value,
-            },
-        });
+        let requestUrl = `/api/products?page=${page}`;
+
+        if (searchQuery.value || sortBy.value) {
+            // Add the search query if it exists.
+            if (searchQuery.value) {
+                requestUrl += `&s=${searchQuery.value}`;
+            }
+
+            // Add the sorting criteria if it exists.
+            if (sortBy.value) {
+                requestUrl += `&sort_by=${sortBy.value}`;
+            }
+        }
+
+        const response = await axios.get(requestUrl);
         products.value = response.data;
+        console.log(response.data);
     } catch (error) {
         console.error(error);
     }
 };
 
-const fetchProducts = async (page = 1) => {
-    try {
-        const response = await axios.get(`/api/products?page=${page}`);
-        products.value = response.data;
-
-    } catch (error) {
-        console.error(error);
-    }
+const sortByName = () => {
+    sortBy.value = 'name';
+    fetchData();
 };
 
+const sortByPrice = () => {
+    sortBy.value = 'price';
+    fetchData();
+};
 
-onMounted( () => {
-    fetchProducts();
-
+onMounted(() => {
+    fetchData();
 });
-
 </script>

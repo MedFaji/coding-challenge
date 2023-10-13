@@ -10,11 +10,30 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('categories')->paginate(3);
+        $query = $request->input('s');
+        $sortBy = $request->input('sort_by');
+
+        $productsQuery = Product::with('categories');
+
+        // Apply search criteria if a query is provided.
+        if ($query) {
+            $productsQuery->where('name', 'LIKE', '%' . $query . '%');
+        }
+
+        // Apply sorting criteria if a sorting option is provided.
+        if ($sortBy === 'name') {
+            $productsQuery->orderBy('name', 'asc');
+        } elseif ($sortBy === 'price') {
+            $productsQuery->orderBy('price', 'asc');
+        }
+
+        $products = $productsQuery->paginate(3); // Adjust the per-page limit as needed
+
         return $products;
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -68,14 +87,5 @@ class ProductController extends Controller
     {
         $product->delete();
         return response()->json(["message" => "Product deleted successfully"]);
-    }
-
-    public function search(Request $request)
-    {
-        $query = $request->input('s');
-        $productsQuery = Product::with('categories')->where('name', 'LIKE', '%' . $query . '%');
-        $products = $productsQuery->paginate(3); // Adjust the per-page limit as needed
-
-        return $products;
     }
 }

@@ -12,7 +12,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::with('categories')->get();
+        $products = Product::with('categories')->paginate(3);
         return $products;
     }
 
@@ -74,7 +74,7 @@ class ProductController extends Controller
     {
         $query = $request->input('s');
         $productsQuery = Product::with('categories')->where('name', 'LIKE', '%' . $query . '%');
-        $products = $productsQuery->get(); // Adjust the per-page limit as needed
+        $products = $productsQuery->paginate(3); // Adjust the per-page limit as needed
 
         return $products;
     }

@@ -21,7 +21,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="product in products" :key="product.id">
+            <tr v-for="product in products.data" :key="product.id">
                 <td>{{ product.id }}</td>
                 <td>{{ product.name }}</td>
                 <td>{{ product.description }}</td>
@@ -41,20 +41,26 @@
             </tbody>
         </table>
     </div>
+    <div class="d-flex justify-content-center mt-5"><Bootstrap5Pagination
+        :data="products"
+        @pagination-change-page="fetchProducts"
+    /></div>
+
 
 
 </template>
 <script setup>
 import axios from 'axios';
 import { ref, onMounted } from 'vue';
+import { Bootstrap5Pagination } from 'laravel-vue-pagination';
 
 
 const products = ref([]);
 const searchQuery = ref('');
 
-const searchProducts = async () => {
+const searchProducts = async (page = 1) => {
     try {
-        const response = await axios.get(`/api/products/search`, {
+        const response = await axios.get(`/api/products/search?page=${page}`, {
             params: {
                 s: searchQuery.value,
             },

@@ -47,7 +47,20 @@ class ProductController extends Controller
             'category_ids' => 'required|array',
         ]);
 
-        $product = Product::create($request->all());
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('images', 'public');
+        } else {
+            $imagePath = null;
+        }
+
+        $product = Product::create([
+            'name' => $request->input('name'),
+            'description' => $request->input('description'),
+            'price' => $request->input('price'),
+            'image' => $imagePath, // Save the image path in the database
+            'category_ids' => $request->input('category_ids'),
+        ]);
+
         $product->categories()->sync($request->input('category_ids'));
         return response()->json($product, 201);
     }

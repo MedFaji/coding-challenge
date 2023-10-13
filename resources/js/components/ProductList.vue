@@ -3,11 +3,9 @@
         <div class="d-flex justify-content-between">
             <div>
                 <h3>Products</h3>
-
             </div>
             <div>
-
-                <input class="form-control me-2" placeholder="Search products" aria-label="Search">
+                <input class="form-control me-2" v-model="searchQuery" @input="searchProducts" placeholder="Search products" aria-label="Search">
             </div>
         </div>
 
@@ -37,14 +35,11 @@
                 <td>
                     <div class="row gap-3">
                         <router-link :to="`/products/${product.id}`" class="p-2 col border btn btn-primary">View</router-link>
-
                     </div>
                 </td>
             </tr>
             </tbody>
         </table>
-
-
     </div>
 
 
@@ -55,7 +50,20 @@ import { ref, onMounted } from 'vue';
 
 
 const products = ref([]);
+const searchQuery = ref('');
 
+const searchProducts = async () => {
+    try {
+        const response = await axios.get(`/api/products/search`, {
+            params: {
+                s: searchQuery.value,
+            },
+        });
+        products.value = response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
 
 const fetchProducts = async (page = 1) => {
     try {

@@ -66,7 +66,8 @@ A category is defined by:
 ---
 
 ## Getting Started
-
+- [x] Configure your database in DotEnv file first.
+- [x] Run the migration to create the tables in the database.
 - [x] Make sure you run the command : **npm i**, in order to install all the required dependecies then you can run the project using the command **php artisan serve** and **npm run dev**.
 
 ---

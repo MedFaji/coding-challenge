@@ -75,10 +75,9 @@ const fetchData = async (page = 1) => {
                 requestUrl += `&sort_by=${sortBy.value}`;
             }
         }
-
         const response = await axios.get(requestUrl);
         products.value = response.data;
-        console.log(response.data);
+
     } catch (error) {
         console.error(error);
     }

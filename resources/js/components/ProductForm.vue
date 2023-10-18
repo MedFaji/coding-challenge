@@ -55,7 +55,6 @@ const ProductPictureUrl = ref(null);
 const handleFileChange = (e) => {
     const file = e.target.files[0];
     ProductPictureUrl.value = URL.createObjectURL(file);
-    console.log(ProductPictureUrl.value)
 }
 
 

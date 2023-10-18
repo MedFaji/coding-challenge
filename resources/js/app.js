@@ -12,7 +12,6 @@ const router = createRouter({
         { path: '/', component: ProductList },
         { path: '/products/create', component: ProductForm },
         { path: '/products/:id', component: Product },
-        { path: '/products/:id/edit', component: ProductForm },
     ]
 });
 const app = createApp(App);

@@ -10,8 +10,6 @@
         <ul >
             <li v-for="category in product.categories">{{ category.name }}</li>
         </ul>
-
-        <router-link :to="`/products/${product.id}/edit`" class="btn btn-primary">Edit</router-link>
     </div>
 </template>
 

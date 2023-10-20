@@ -1,104 +1,92 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use App\Models\Product;
+use App\Http\Requests\ProductRequest;
+use App\Interfaces\ProductRepositoryInterface;
+use App\Services\ImageUploadService;
 use Illuminate\Http\Request;
+use \Illuminate\Http\JsonResponse;
+
 
 class ProductController extends Controller
 {
+    private ProductRepositoryInterface $productRepository;
+    private ImageUploadService $imageUploadService;
+
+    public function __construct(ProductRepositoryInterface $productRepository, ImageUploadService $imageUploadService)
+    {
+        $this->productRepository = $productRepository;
+        $this->imageUploadService = $imageUploadService;
+    }
+
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $query = $request->input('s');
         $sortBy = $request->input('sort_by');
+        $per_page = 3;
 
-        $productsQuery = Product::with('categories');
+        $products = $this->productRepository->searchProducts($query, $sortBy, $per_page);
 
-        // Apply search criteria if a query is provided.
-        if ($query) {
-            $productsQuery->where('name', 'LIKE', '%' . $query . '%');
-        }
+        return response()->json($products);
 
-        // Apply sorting criteria if a sorting option is provided.
-        if ($sortBy === 'name') {
-            $productsQuery->orderBy('name', 'asc');
-        } elseif ($sortBy === 'price') {
-            $productsQuery->orderBy('price', 'asc');
-        }
-
-        $products = $productsQuery->paginate(3); // Adjust the per-page limit as needed
-
-        return $products;
-    }
-
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string',
-            'description' => 'required|string',
-            'price' => 'required|numeric',
-            'category_ids' => 'required|array',
-        ]);
-
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('images', 'public');
-        } else {
-            $imagePath = null;
-        }
-
-        $product = Product::create([
-            'name' => $request->input('name'),
-            'description' => $request->input('description'),
-            'price' => $request->input('price'),
-            'image' => $imagePath, // Save the image path in the database
-            'category_ids' => $request->input('category_ids'),
-        ]);
-
-        $product->categories()->sync($request->input('category_ids'));
-        return response()->json($product, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Product $product)
+    public function show(Request $request): JsonResponse
     {
-        $product->load('categories'); //eager loading
-        return $product;
+        $productId = $request->route('productId');
+        $product = $this->productRepository->getProductById($productId);
+
+        return response()->json($product);
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(ProductRequest $request): JsonResponse
+    {
+        $productDetails = $request->validated();
+        $categoryIds = $request->input('category_ids');
+        $imagePath = null;
+
+        if ($request->hasFile('image')) {
+            $imagePath = $this->imageUploadService->upload($request->file('image'));
+        }
+
+        $productDetails['image'] = $imagePath;
+        $product = $this->productRepository->createProduct($productDetails, $categoryIds);
+
+        return response()->json($product, 201);
+    }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
+    public function update(ProductRequest $request): JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string',
-            'description' => 'required|string',
-            'price' => 'required|numeric',
-            'category_ids' => 'required|array',
-        ]);
+        $productId = $request->route('productId');
+        
+        $newDetails = $request->except('category_ids');
+        $newCategoryIds = $request->input('category_ids');
 
-        $product->update($request->all());
-        $product->categories()->sync($request->input('category_ids'));
+        $product = $this->productRepository->updateProduct($productId, $newDetails, $newCategoryIds);
 
-        return $product;
+        return response()->json($product);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Product $product)
+    public function destroy(Request $request): JsonResponse
     {
-        $product->delete();
+        $productId = $request->route('productId');
+
+        $this->productRepository->deleteProduct($productId);
         return response()->json(["message" => "Product deleted successfully"]);
     }
 }

@@ -55,14 +55,29 @@ const ProductPictureUrl = ref(null);
 const handleFileChange = (e) => {
     const file = e.target.files[0];
     ProductPictureUrl.value = URL.createObjectURL(file);
+    product.value.image = file;
 }
 
 
 async function submitForm() {
     try {
-        // Assign the selected category IDs to the product
-        product.value.category_ids = selectedCategories.value;
-        await axios.post('/api/products', product.value);
+        const formData = new FormData();
+        formData.append('name', product.value.name);
+        formData.append('description', product.value.description);
+        formData.append('price', product.value.price);
+        formData.append('image', product.value.image); // Append the image file
+
+        // Append the selected category IDs
+        selectedCategories.value.forEach((categoryId) => {
+            formData.append('category_ids[]', categoryId);
+        });
+
+        await axios.post('/api/products', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data', // Set the correct content type for file uploads
+            },
+        });
+
         await router.push('/');
     } catch (error) {
         console.error(error);

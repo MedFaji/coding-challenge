@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Validator;
 
 class CreateProduct extends Command
 {
@@ -29,11 +31,23 @@ class CreateProduct extends Command
         $name= $this->argument('name');
         $description = $this->argument('description');
         $price= $this->argument('price');
-        $product = Product::create([
-            "name" => $name,
-            "description" => $description,
-            "price" => $price
-        ]);
-        $this->info("Product '$name' created successfully");
+
+        $data = [
+            'name' => $name,
+            'description' => $description,
+            'price' => $price
+        ];
+
+        $validator = Validator::make($data, (new \App\Http\Requests\ProductRequest)->rules());
+
+        if ($validator->fails()) {
+            $this->error('Validation failed. Please check the input.');
+            foreach ($validator->errors()->all() as $error) {
+                $this->error($error);
+            }
+        } else {
+            $product = Product::create($data);
+            $this->info("Product created with name: $name, description: $description, price: $price");
+        }
     }
 }

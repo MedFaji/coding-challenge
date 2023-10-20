@@ -2,8 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Requests\CategoryRequest;
+use App\Http\Requests\ProductRequest;
 use App\Models\Category;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Validator;
 
 class CreateCategory extends Command
 {
@@ -27,7 +30,18 @@ class CreateCategory extends Command
     public function handle()
     {
         $name = $this->argument('name');
-        Category::create(["name" => $name]);
-        $this->info("Category '$name' created successfully.");
+
+        $validator = Validator::make(['name' => $name], (new \App\Http\Requests\CategoryRequest)->rules());
+
+        if ($validator->fails()) {
+            $this->error('Validation failed. Please check the input.');
+            foreach ($validator->errors()->all() as $error) {
+                $this->error($error);
+            }
+        } else {
+            Category::create(['name' => $name]);
+            $this->info("Category '$name' created successfully");
+        }
     }
+
 }
